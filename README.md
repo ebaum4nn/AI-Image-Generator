@@ -15,11 +15,22 @@ A full-stack web application for AI-powered image generation with user authentic
 
 ## Screenshots
 
+#### Admin Dashboard
 ![Admin Dashboard](screenshots/admin-panel.png)
+
+#### Credits Page
 ![Credits Page](screenshots/credits.png)
+
+#### User Dashboard
 ![User Dashboard](screenshots/dashboard.png)
+
+#### User Profile
 ![User Profile](screenshots/profile.png)
+
+#### Sidebar Navigation
 ![Sidebar Navigation](screenshots/sidebar.png)
+
+#### Watermark Settings
 ![Watermark Settings](screenshots/watermark.png)
 
 ## Tech Stack
