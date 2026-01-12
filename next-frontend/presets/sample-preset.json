@@ -1,0 +1,9 @@
+{
+  "name": "Basic Sample",
+  "description": "A basic sample preset for image generation",
+  "prompt": "A beautiful landscape with mountains and a lake",
+  "height": 512,
+  "width": 512,
+  "steps": 20,
+  "guidance": 7.0
+}

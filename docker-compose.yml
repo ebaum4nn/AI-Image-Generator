@@ -1,0 +1,134 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: app-postgres
+    environment:
+      POSTGRES_DB: app_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Valkey (Redis-compatible)
+  valkey:
+    image: valkey/valkey:7-alpine
+    container_name: app-valkey
+    command: valkey-server --appendonly yes
+    volumes:
+      - valkey_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Next.js Application
+  app:
+    build:
+      context: ./next-frontend
+      dockerfile: Dockerfile
+    container_name: frontend-next
+    command: npm run dev
+    user: root
+    env_file:
+      - .env.local
+    environment:
+      - NODE_ENV=development
+      - NEXTAUTH_URL=http://localhost
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-your-secret-key-change-this-in-production}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/app_db
+      - REDIS_URL=redis://valkey:6379
+      - BACKEND_URL=http://backend-nextjs:3000
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+      - STORAGE_PROVIDER=local
+      - AWS_S3_BUCKET=
+      - AWS_REGION=
+      - AWS_ACCESS_KEY_ID=
+      - AWS_SECRET_ACCESS_KEY=
+      - AWS_S3_PUBLIC_BASE_URL=
+    volumes:
+      - ./next-frontend/public/images:/app/public/images
+    depends_on:
+      - postgres
+      - valkey
+    ports:
+      - "3000:3000"
+    networks:
+      - flux-network
+
+# Backend Next.js Application
+  backend-nextjs:
+    build:
+      context: ./next-backend
+    container_name: backend-nextjs
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - FRONTEND_PUBLIC_URL=http://localhost:3000
+      - FRONTEND_INTERNAL_URL=http://app:3000
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - valkey
+    networks:
+      - flux-network
+
+  # Caddy Reverse Proxy
+  caddy:
+    image: caddy:2-alpine
+    container_name: flux-caddy
+    ports:
+      - "80:80"
+      - "9443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - flux-network
+    restart: unless-stopped
+
+  # Kong API Gateway (Optional - uncomment if needed)
+  # kong:
+  #   image: kong:3.4-alpine
+  #   container_name: flux-kong
+  #   environment:
+  #     KONG_DATABASE: postgres
+  #     KONG_PG_HOST: postgres
+  #     KONG_PG_PORT: 5432
+  #     KONG_PG_USER: ${KONG_PG_USER:-kong}
+  #     KONG_PG_PASSWORD: ${KONG_PG_PASSWORD:-kong}
+  #     KONG_PG_DATABASE: ${KONG_PG_DATABASE:-kong}
+  #     KONG_ADMIN_LISTEN: 0.0.0.0:8001
+  #   depends_on:
+  #     - postgres
+  #   ports:
+  #     - "8000:8000"  # Kong proxy port
+  #     - "8443:8443"  # Kong proxy SSL port
+  #     - "8001:8001"  # Kong admin API
+  #     - "8444:8444"  # Kong admin SSL API
+  #   networks:
+  #     - flux-network
+  #   restart: unless-stopped
+
+volumes:
+  postgres_data:
+  valkey_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  app-network:
+    driver: bridge
+  flux-network:
+    driver: bridge

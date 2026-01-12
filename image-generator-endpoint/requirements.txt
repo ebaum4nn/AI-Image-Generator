@@ -1,0 +1,12 @@
+# Core dependencies for RunPod serverless
+runpod
+flask
+requests
+accelerate
+transformers
+diffusers>=0.29.0  # Need latest version for FLUX.2 support
+huggingface_hub
+numpy
+sentencepiece
+bitsandbytes
+Pillow

@@ -1,0 +1,17 @@
+{
+  "name": "image-generator-endpoint",
+  "imageName": "your-docker-registry/image-generator-endpoint:latest",
+  "env": {
+    "HF_TOKEN": "{{ RUNPOD_SECRET_HuggingFaceAPI }}"
+  },
+  "gpuTypes": ["NVIDIA RTX A4000", "NVIDIA RTX A4500", "NVIDIA RTX A5000"],
+  "minVram": 16,
+  "containerDiskInGb": 50,
+  "volumeInGb": 100,
+  "volumeMountPath": "/app/model_cache",
+  "ports": "8000/http",
+  "maxConcurrency": 1,
+  "maxRuntime": 300,
+  "idleTimeout": 300,
+  "locations": ["US-EAST-1", "US-WEST-1"]
+}

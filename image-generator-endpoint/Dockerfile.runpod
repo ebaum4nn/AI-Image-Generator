@@ -1,0 +1,67 @@
+FROM nvidia/cuda:12.1.0-devel-ubuntu22.04
+
+# Build-time argument for Hugging Face token
+ARG HF_TOKEN
+ENV HF_TOKEN=${HF_TOKEN}
+
+# Set working directory
+WORKDIR /app
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-dev \
+    curl \
+    wget \
+    git \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create symlink for python
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
+# Upgrade pip
+RUN python -m pip install --upgrade pip
+
+# Install PyTorch with CUDA support
+RUN pip install --no-cache-dir torch>=2.1.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Install core dependencies first
+RUN pip install --no-cache-dir runpod flask requests accelerate numpy Pillow
+
+# Install transformers and diffusers (these can be tricky)
+RUN pip install --no-cache-dir transformers diffusers>=0.29.0 huggingface_hub
+
+# Install remaining packages
+RUN pip install --no-cache-dir sentencepiece bitsandbytes
+
+# Copy requirements for reference (already installed above)
+COPY requirements.txt .
+
+# Copy handler script
+COPY handler.py .
+
+# Set up model cache directory (model will be downloaded on first run)
+ENV TRANSFORMERS_CACHE=/app/model_cache
+ENV DIFFUSERS_CACHE=/app/model_cache
+ENV HF_HOME=/app/model_cache
+RUN mkdir -p /app/model_cache
+
+# Set environment variables
+ENV PYTHONPATH="/app"
+ENV PYTHONUNBUFFERED=1
+ENV CUDA_VISIBLE_DEVICES="0"
+ENV PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+# Hugging Face token (set via build arg or environment variable)
+# If not set via build arg, can be set in RunPod environment variables
+
+# Expose ports
+EXPOSE 8000
+
+# Set the command to run the handler
+CMD ["python", "handler.py"]

@@ -1,0 +1,49 @@
+# Caddy Configuration
+# Reverse proxy for the Image Generator application
+
+# Main domain - HTTP only for development
+http://localhost {
+
+    # Proxy all requests to Next.js app (including API routes)
+    reverse_proxy app:3000
+
+    # Route backend admin and APIs via path prefix
+    @backend {
+        path /backend*
+    }
+    reverse_proxy @backend backend-nextjs:3000 {
+        header_up Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-For {remote}
+    }
+
+    # Security headers
+    header {
+        # Security headers
+        X-Frame-Options "SAMEORIGIN"
+        X-XSS-Protection "1; mode=block"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+
+        # Remove server header
+        -Server
+    }
+
+    # Gzip compression
+    encode gzip
+
+    # Rate limiting (optional - requires rate-limit plugin)
+    # rate_limit {
+    #     zone static {
+    #         key {remote_host}
+    #         window 1m
+    #         events 100
+    #     }
+    # }
+}
+
+# Kong proxy (uncomment if using Kong)
+# api.localhost {
+#     reverse_proxy kong:8000
+# }
