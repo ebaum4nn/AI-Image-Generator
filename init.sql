@@ -12,6 +12,11 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Insert default admin user
+INSERT INTO users (email, name, password, credits, role) 
+VALUES ('admin@example.com', 'Admin', '$2b$10$NSK68D1Fo9xfmZq0AUVqJewSPSukxtzoTt5dmqutn/utuCVtWA/3.', 1000, 'admin')
+ON CONFLICT (email) DO NOTHING;
+
 -- Create sessions table for NextAuth
 CREATE TABLE IF NOT EXISTS sessions (
     id SERIAL PRIMARY KEY,

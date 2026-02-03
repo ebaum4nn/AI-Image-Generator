@@ -15,6 +15,9 @@ A full-stack web application for AI-powered image generation with user authentic
 
 ## Screenshots
 
+#### Front End Interface
+![Front End Interface](screenshots/frontend-interface.png)
+
 #### Admin Dashboard
 ![Admin Dashboard](screenshots/admin-panel.png)
 
@@ -93,6 +96,10 @@ This project showcases expertise in:
 4. **Access the application**
    - Frontend: http://localhost
    - Admin panel: http://localhost/admin
+
+5. **Default Admin Login**
+   - Email: admin@example.com
+   - Password: adminpassword
 
 ## Environment Setup
 
